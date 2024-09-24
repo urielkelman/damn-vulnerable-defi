@@ -20,7 +20,11 @@ contract SimpleGovernance is ISimpleGovernance {
         _actionCounter = 1;
     }
 
-    function queueAction(address target, uint128 value, bytes calldata data) external returns (uint256 actionId) {
+    function queueAction(
+        address target,
+        uint128 value,
+        bytes calldata data
+    ) external returns (uint256 actionId) {
         if (!_hasEnoughVotes(msg.sender)) {
             revert NotEnoughVotes(msg.sender);
         }
@@ -50,7 +54,9 @@ contract SimpleGovernance is ISimpleGovernance {
         emit ActionQueued(actionId, msg.sender);
     }
 
-    function executeAction(uint256 actionId) external payable returns (bytes memory) {
+    function executeAction(
+        uint256 actionId
+    ) external payable returns (bytes memory) {
         if (!_canBeExecuted(actionId)) {
             revert CannotExecute(actionId);
         }
@@ -60,7 +66,11 @@ contract SimpleGovernance is ISimpleGovernance {
 
         emit ActionExecuted(actionId, msg.sender);
 
-        return actionToExecute.target.functionCallWithValue(actionToExecute.data, actionToExecute.value);
+        return
+            actionToExecute.target.functionCallWithValue(
+                actionToExecute.data,
+                actionToExecute.value
+            );
     }
 
     function getActionDelay() external pure returns (uint256) {
@@ -71,7 +81,9 @@ contract SimpleGovernance is ISimpleGovernance {
         return address(_votingToken);
     }
 
-    function getAction(uint256 actionId) external view returns (GovernanceAction memory) {
+    function getAction(
+        uint256 actionId
+    ) external view returns (GovernanceAction memory) {
         return _actions[actionId];
     }
 
@@ -94,7 +106,9 @@ contract SimpleGovernance is ISimpleGovernance {
             timeDelta = uint64(block.timestamp) - actionToExecute.proposedAt;
         }
 
-        return actionToExecute.executedAt == 0 && timeDelta >= ACTION_DELAY_IN_SECONDS;
+        return
+            actionToExecute.executedAt == 0 &&
+            timeDelta >= ACTION_DELAY_IN_SECONDS;
     }
 
     function _hasEnoughVotes(address who) private view returns (bool) {
