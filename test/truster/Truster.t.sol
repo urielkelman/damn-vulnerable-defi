@@ -11,7 +11,7 @@ contract TrusterChallenge is Test {
     address deployer = makeAddr("deployer");
     address player = makeAddr("player");
     address recovery = makeAddr("recovery");
-    
+
     uint256 constant TOKENS_IN_POOL = 1_000_000e18;
 
     DamnValuableToken public token;
@@ -54,7 +54,7 @@ contract TrusterChallenge is Test {
     function test_truster() public checkSolvedByPlayer {
         HackContract hackContract = new HackContract();
 
-				hackContract.hackContract(address(pool), address(token), recovery);
+        hackContract.hackContract(address(pool), address(token), recovery);
     }
 
     /**
@@ -66,6 +66,10 @@ contract TrusterChallenge is Test {
 
         // All rescued funds sent to recovery account
         assertEq(token.balanceOf(address(pool)), 0, "Pool still has tokens");
-        assertEq(token.balanceOf(recovery), TOKENS_IN_POOL, "Not enough tokens in recovery account");
+        assertEq(
+            token.balanceOf(recovery),
+            TOKENS_IN_POOL,
+            "Not enough tokens in recovery account"
+        );
     }
 }
