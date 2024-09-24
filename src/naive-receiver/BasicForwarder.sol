@@ -21,7 +21,7 @@ contract BasicForwarder is EIP712 {
         uint256 deadline;
     }
 
-    error InvalidSigner();
+    error InvalidSigner(address signer);
     error InvalidNonce();
     error OldRequest();
     error InvalidTarget();
@@ -49,7 +49,7 @@ contract BasicForwarder is EIP712 {
         if (IHasTrustedForwarder(request.target).trustedForwarder() != address(this)) revert InvalidTarget();
 
         address signer = ECDSA.recover(_hashTypedData(getDataHash(request)), signature);
-        if (signer != request.from) revert InvalidSigner();
+        if (signer != request.from) revert InvalidSigner(signer);
     }
 
     function execute(Request calldata request, bytes calldata signature) public payable returns (bool success) {
